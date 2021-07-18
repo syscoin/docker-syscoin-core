@@ -57,13 +57,10 @@ RUN set -ex \
     gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" ; \
   done
 
-ENV SYSCOIN_VERSION=0.21.1
+ENV SYSCOIN_VERSION=4.3.99
 ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 
-RUN wget https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/SHA256SUMS.asc
-RUN wget https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/syscoin-${SYSCOIN_VERSION}.tar.gz
-RUN gpg --verify SHA256SUMS.asc
-RUN grep " syscoin-${SYSCOIN_VERSION}.tar.gz\$" SHA256SUMS.asc | sha256sum -c -
+RUN wget https://github.com/syscoin/syscoin/archive/refs/heads/dev-4.x-nevm.tar.gz
 RUN tar -xzf *.tar.gz
 
 WORKDIR /syscoin-${SYSCOIN_VERSION}
