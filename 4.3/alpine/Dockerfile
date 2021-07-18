@@ -22,8 +22,8 @@ RUN make -j4
 RUN make install
 RUN rm -rf ${BERKELEYDB_PREFIX}/docs
 
-# Build stage for Bitcoin Core
-FROM alpine as bitcoin-core
+# Build stage for Syscoin Core
+FROM alpine as syscoin-core
 
 COPY --from=berkeleydb /opt /opt
 
@@ -40,6 +40,12 @@ RUN apk --no-cache add libressl
 RUN apk --no-cache add libtool
 RUN apk --no-cache add linux-headers
 RUN apk --no-cache add zeromq-dev
+RUN apk --no-cache add cmake
+RUN apk --no-cache add gcc
+RUN apk --no-cache add g++
+RUN apk --no-cache add libc-dev
+RUN apk --no-cache add make
+
 RUN set -ex \
   && for key in \
     90C8019E36C2E964 \
@@ -51,23 +57,23 @@ RUN set -ex \
     gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" ; \
   done
 
-ENV BITCOIN_VERSION=0.21.1
-ENV BITCOIN_PREFIX=/opt/bitcoin-${BITCOIN_VERSION}
+ENV SYSCOIN_VERSION=0.21.1
+ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}.tar.gz
+RUN wget https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/SHA256SUMS.asc
+RUN wget https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/syscoin-${SYSCOIN_VERSION}.tar.gz
 RUN gpg --verify SHA256SUMS.asc
-RUN grep " bitcoin-${BITCOIN_VERSION}.tar.gz\$" SHA256SUMS.asc | sha256sum -c -
+RUN grep " syscoin-${SYSCOIN_VERSION}.tar.gz\$" SHA256SUMS.asc | sha256sum -c -
 RUN tar -xzf *.tar.gz
 
-WORKDIR /bitcoin-${BITCOIN_VERSION}
+WORKDIR /syscoin-${SYSCOIN_VERSION}
 
 RUN sed -i '/AC_PREREQ/a\AR_FLAGS=cr' src/univalue/configure.ac
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
 RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat.h
 RUN ./autogen.sh
 RUN ./configure LDFLAGS=-L`ls -d /opt/db*`/lib/ CPPFLAGS=-I`ls -d /opt/db*`/include/ \
-    --prefix=${BITCOIN_PREFIX} \
+    --prefix=${SYSCOIN_PREFIX} \
     --mandir=/usr/share/man \
     --disable-tests \
     --disable-bench \
@@ -78,20 +84,18 @@ RUN ./configure LDFLAGS=-L`ls -d /opt/db*`/lib/ CPPFLAGS=-I`ls -d /opt/db*`/incl
     --with-daemon
 RUN make -j4
 RUN make install
-RUN strip ${BITCOIN_PREFIX}/bin/bitcoin-cli
-RUN strip ${BITCOIN_PREFIX}/bin/bitcoin-tx
-RUN strip ${BITCOIN_PREFIX}/bin/bitcoind
-RUN strip ${BITCOIN_PREFIX}/lib/libbitcoinconsensus.a
-RUN strip ${BITCOIN_PREFIX}/lib/libbitcoinconsensus.so.0.0.0
+RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-cli
+RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-tx
+RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
+RUN strip ${SYSCOIN_PREFIX}/lib/libsyscoinconsensus.a
+RUN strip ${SYSCOIN_PREFIX}/lib/libsyscoinconsensus.so.0.0.0
 
 # Build stage for compiled artifacts
 FROM alpine
 
-LABEL maintainer.0="João Fonseca (@joaopaulofonseca)" \
-  maintainer.1="Pedro Branco (@pedrobranco)" \
-  maintainer.2="Rui Marinho (@ruimarinho)"
+LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
-RUN adduser -S bitcoin
+RUN adduser -S syscoin
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add \
   boost-filesystem \
@@ -101,20 +105,20 @@ RUN apk --no-cache add \
   libzmq \
   su-exec
 
-ENV BITCOIN_DATA=/home/bitcoin/.bitcoin
-ENV BITCOIN_VERSION=0.21.1
-ENV BITCOIN_PREFIX=/opt/bitcoin-${BITCOIN_VERSION}
-ENV PATH=${BITCOIN_PREFIX}/bin:$PATH
+ENV SYSCOIN_DATA=/home/syscoin/.syscoin
+ENV SYSCOIN_VERSION=4.3.99
+ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
+ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 
-COPY --from=bitcoin-core /opt /opt
+COPY --from=syscoin-core /opt /opt
 COPY docker-entrypoint.sh /entrypoint.sh
 
-VOLUME ["/home/bitcoin/.bitcoin"]
+VOLUME ["/home/syscoin/.syscoin"]
 
-EXPOSE 8332 8333 18332 18333 18444
+EXPOSE 8369 8370 18369 18370 18443 18444 38332 38333
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-RUN bitcoind -version | grep "Bitcoin Core version v${BITCOIN_VERSION}"
+RUN syscoind -version | grep "Syscoin Core version v${SYSCOIN_VERSION}"
 
-CMD ["bitcoind"]
+CMD ["syscoind"]

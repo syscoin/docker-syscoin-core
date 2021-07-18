@@ -1,19 +1,17 @@
 FROM debian:bullseye-slim
 
-LABEL maintainer.0="João Fonseca (@joaopaulofonseca)" \
-  maintainer.1="Pedro Branco (@pedrobranco)" \
-  maintainer.2="Rui Marinho (@ruimarinho)"
+LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
-RUN useradd -r bitcoin \
+RUN useradd -r syscoin \
   && apt-get update -y \
   && apt-get install -y curl gnupg gosu \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ARG TARGETPLATFORM
-ENV BITCOIN_VERSION=0.21.1
-ENV BITCOIN_DATA=/home/bitcoin/.bitcoin
-ENV PATH=/opt/bitcoin-${BITCOIN_VERSION}/bin:$PATH
+ENV SYSCOIN_VERSION=4.3.99
+ENV SYSCOIN_DATA=/home/syscoin/.syscoin
+ENV PATH=/opt/syscoin-${SYSCOIN_VERSION}/bin:$PATH
 
 RUN set -ex \
   && if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then export TARGETPLATFORM=x86_64-linux-gnu; fi \
@@ -28,23 +26,23 @@ RUN set -ex \
       gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key" || \
       gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" ; \
     done \
-  && curl -SLO https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-${TARGETPLATFORM}.tar.gz \
-  && curl -SLO https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS.asc \
+  && curl -SLO https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/syscoin-${SYSCOIN_VERSION}-${TARGETPLATFORM}.tar.gz \
+  && curl -SLO https://syscoincore.org/bin/syscoin-core-${SYSCOIN_VERSION}/SHA256SUMS.asc \
   && gpg --verify SHA256SUMS.asc \
-  && grep " bitcoin-${BITCOIN_VERSION}-${TARGETPLATFORM}.tar.gz" SHA256SUMS.asc | sha256sum -c - \
+  && grep " syscoin-${SYSCOIN_VERSION}-${TARGETPLATFORM}.tar.gz" SHA256SUMS.asc | sha256sum -c - \
   && tar -xzf *.tar.gz -C /opt \
   && rm *.tar.gz *.asc \
-  && rm -rf /opt/bitcoin-${BITCOIN_VERSION}/bin/bitcoin-qt
+  && rm -rf /opt/syscoin-${SYSCOIN_VERSION}/bin/syscoin-qt
 
 COPY docker-entrypoint.sh /entrypoint.sh
 
-VOLUME ["/home/bitcoin/.bitcoin"]
+VOLUME ["/home/syscoin/.syscoin"]
 
-EXPOSE 8332 8333 18332 18333 18443 18444 38333 38332
+EXPOSE 8369 8370 18369 18370 18443 18444 38332 38333
 
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-RUN bitcoind -version | grep "Bitcoin Core version v${BITCOIN_VERSION}"
+RUN syscoind -version | grep "Syscoin Core version v${SYSCOIN_VERSION}"
 
-CMD ["bitcoind"]
+CMD ["syscoind"]
