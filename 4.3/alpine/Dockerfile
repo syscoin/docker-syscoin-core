@@ -4,24 +4,23 @@ FROM alpine as syscoin-core
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add autoconf
 RUN apk --no-cache add automake
-RUN apk --no-cache add boost-dev
 RUN apk --no-cache add build-base
 RUN apk --no-cache add chrpath
 RUN apk --no-cache add file
 RUN apk --no-cache add gnupg
-RUN apk --no-cache add libevent-dev
-RUN apk --no-cache add curl-dev
-RUN apk --no-cache add gnutls-dev
-RUN apk --no-cache add gmp-dev
 RUN apk --no-cache add libtool
 RUN apk --no-cache add linux-headers
-RUN apk --no-cache add zeromq-dev
 RUN apk --no-cache add cmake
-RUN apk --no-cache add gcc
-RUN apk --no-cache add g++
 RUN apk --no-cache add libc-dev
 RUN apk --no-cache add make
 RUN apk --no-cache add git
+RUN apk --no-cache add python3
+RUN apk --no-cache add xz
+RUN apk --no-cache add bison
+RUN apk --no-cache add curl
+RUN apk --no-cache add pkgconf
+RUN apk --no-cache add bash
+RUN apk --no-cache add clang
 
 RUN set -ex \
   && for key in \
@@ -45,25 +44,30 @@ WORKDIR /syscoin-dev-4.x-nevm
 RUN sed -i '/AC_PREREQ/a\AR_FLAGS=cr' src/univalue/configure.ac
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
 RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat.h
+RUN make -C depends
 RUN ./autogen.sh
-run rm /usr/lib/libsodium.so
-RUN ./configure --prefix=${SYSCOIN_PREFIX} \
+RUN CONFIG_SITE=$PWD/depends/x86_64-pc-linux-musl/share/config.site  ./configure \  
+    --prefix=${SYSCOIN_PREFIX} \
     --mandir=/usr/share/man \
     --disable-tests \
     --disable-bench \
     --disable-ccache \
-    --disable-wallet \
+    --disable-maintainer-mode \
+    --disable-dependency-tracking \
+    --enable-reduce-exports \
     --with-gui=no \
     --with-utils \
     --with-libs \
-    --with-daemon
-RUN make
+    --with-daemon \
+    CC=clang CXX=clang++ \
+    CFLAGS="-O2 -g0 --static -static -fPIC" \
+    CXXFLAGS="-O2 -g0 --static -static -fPIC" \
+    LDFLAGS="-s -static-libgcc -static-libstdc++ -Wl,-O2"
+
 RUN make install
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-cli
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-tx
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
-RUN strip ${SYSCOIN_PREFIX}/lib/libsyscoinconsensus.a
-RUN strip ${SYSCOIN_PREFIX}/lib/libsyscoinconsensus.so.0.0.0
 
 # Build stage for compiled artifacts
 FROM alpine
@@ -72,14 +76,7 @@ LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
 RUN adduser -S syscoin
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
-RUN apk --no-cache add \
-  boost-filesystem \
-  boost-system \
-  boost-thread \
-  libevent \
-  libzmq \
-  su-exec \
-  libcurl
+RUN apk --no-cache add su-exec
 
 ENV SYSCOIN_DATA=/home/syscoin/.syscoin
 ENV SYSCOIN_VERSION=4.3.99
