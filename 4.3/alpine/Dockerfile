@@ -2,7 +2,7 @@
 FROM golang:1.16-alpine as go-ethereum
 
 ARG GETH_REPO=https://github.com/sidhujag/go-ethereum.git
-ARG GETH_BRANCH=nevm
+ARG GETH_BRANCH=master
 
 RUN set -xe; \
   apk add --no-cache --virtual .build-deps \
@@ -95,8 +95,7 @@ ENV LC_ALL C
 RUN set set -xe; \
     mkdir -p ${SYSCOIN_DATA}; \
     apk add --no-cache wget; \
-    wget https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json -O ${SYSCOIN_DATA}/gethdescriptor.json; \
-    chmod +x ${SYSCOIN_DATA}/gethdescriptor.json
+    wget https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json -O ${SYSCOIN_DATA}/gethdescriptor.json
 
 # Copy NEVM binary to the container
 COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
