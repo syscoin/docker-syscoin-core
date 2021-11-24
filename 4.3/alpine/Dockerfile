@@ -48,13 +48,13 @@ RUN set -ex \
     gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" ; \
   done
 
-ENV SYSCOIN_VERSION=4.3.0rc1
+ENV SYSCOIN_VERSION=4.3.0
 ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 
-RUN wget https://github.com/syscoin/syscoin/releases/download/v4.3.0rc1/syscoin-4.3.0rc1.tar.gz
+RUN wget https://github.com/syscoin/syscoin/releases/download/v4.3.0/syscoin-4.3.0.tar.gz
 RUN tar -xzf *.tar.gz
 
-WORKDIR /syscoin
+WORKDIR /syscoin-4.3.0
 
 RUN sed -i '/AC_PREREQ/a\AR_FLAGS=cr' src/univalue/configure.ac
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
@@ -95,7 +95,7 @@ RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fast
 RUN apk --no-cache add wget su-exec
 
 ENV SYSCOIN_DATA=/home/syscoin/.syscoin
-ENV SYSCOIN_VERSION=4.3.0rc1
+ENV SYSCOIN_VERSION=4.3.0
 ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 
