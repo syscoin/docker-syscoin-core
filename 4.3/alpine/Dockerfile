@@ -1,17 +1,12 @@
 # Build Geth in a stock Go builder container
-FROM golang:1.16-alpine as go-ethereum
+FROM golang:1.17-alpine as go-ethereum
 
 ARG GETH_REPO=https://github.com/syscoin/go-ethereum.git
-ARG GETH_BRANCH=master
 
-RUN set -xe; \
-  apk add --no-cache --virtual .build-deps \
-  make gcc musl-dev linux-headers git; \
-  mkdir -p go-ethereum; \
-  git clone ${GETH_REPO} --branch ${GETH_BRANCH} --depth 1 --single-branch go-ethereum; \
-  cd go-ethereum; \
-  make geth -j$(nproc) all; \
-  apk del .build-deps;
+RUN apk add --no-cache gcc musl-dev linux-headers git
+RUN git clone ${GETH_REPO}
+ADD . /go-ethereum
+RUN cd go-ethereum && go run build/ci.go install
 
 # Build stage for Syscoin Core
 FROM alpine as syscoin-core
@@ -86,7 +81,7 @@ RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
 
 
 # Build stage for compiled artifacts
-FROM alpine
+FROM alpine:latest
 
 LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
@@ -99,6 +94,8 @@ ENV SYSCOIN_VERSION=4.3.0
 ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 
+RUN apk add --no-cache ca-certificates
+
 # Copy NEVM binary to the container
 COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
 COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_DATA}/faucet
@@ -109,7 +106,7 @@ COPY docker-entrypoint.sh /entrypoint.sh
 
 VOLUME ["/home/syscoin/.syscoin"]
 
-EXPOSE 8369 8370 18369 18370 18443 18444 38332 38333
+EXPOSE 8369 8370 18369 18370 18443 18444 38332 38333 8545 8546 30303 30303/udp
 
 ENTRYPOINT ["/entrypoint.sh"]
 
