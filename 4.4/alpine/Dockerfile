@@ -99,7 +99,6 @@ RUN apk add --no-cache ca-certificates
 # Copy NEVM binary to the container
 COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
 COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_DATA}/faucet
-RUN wget https://raw.githubusercontent.com/syscoin/descriptors/${NETWORK}/gethdescriptor.json -O ${SYSCOIN_DATA}/gethdescriptor.json
 
 COPY --from=syscoin-core /opt /opt
 COPY docker-entrypoint.sh /entrypoint.sh
