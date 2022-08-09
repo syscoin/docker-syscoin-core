@@ -9,7 +9,7 @@ ADD . /go-ethereum
 RUN cd go-ethereum && go run build/ci.go install
 
 # Build stage for Syscoin Core
-FROM alpine as syscoin-core
+FROM alpine:latest as syscoin-core
 
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add autoconf
@@ -50,10 +50,11 @@ ENV SYSCOIN_PREFIX=/opt/syscoin-${SYSCOIN_VERSION}
 RUN wget https://github.com/syscoin/syscoin/releases/download/v4.4.0rc1/syscoin-4.4.0rc1.tar.gz
 RUN tar -xzf *.tar.gz
 
-WORKDIR /syscoin-4.4.0rc1
+
+WORKDIR /syscoin
 
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
-RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat.h
+RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat/compat.h
 RUN make -C depends -j $(nproc)
 RUN ./autogen.sh
 RUN CONFIG_SITE=$PWD/depends/x86_64-pc-linux-musl/share/config.site  ./configure \  
