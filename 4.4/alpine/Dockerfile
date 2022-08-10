@@ -7,7 +7,7 @@ RUN git clone ${GETH_REPO}
 ADD . /go-ethereum
 RUN cd go-ethereum && go run build/ci.go install
 # Build stage for Syscoin Core
-FROM alpine:latest as syscoin-core
+FROM alpine:3.15 as syscoin-core
 
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add autoconf
@@ -51,9 +51,7 @@ ENV SYSCOIN_PREFIX=/opt/syscoin
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
 
 RUN git clone ${SYS_REPO} -b dev-4.x
-
 WORKDIR /syscoin
-
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
 RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat/compat.h
 RUN ./autogen.sh
@@ -73,7 +71,7 @@ RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-tx
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
 
 # Build stage for compiled artifacts
-FROM alpine
+FROM alpine:3.15
 
 LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
@@ -89,15 +87,15 @@ RUN apk --no-cache add \
   ca-certificates \
   gmp
 
-# Copy NEVM binary to the container
-COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
-COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_DATA}/faucet
-
 ENV SYSCOIN_DATA=/home/syscoin/.syscoin
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 ENV SYSCOIN_VERSION=4.4.0
 
+# Copy NEVM binary to the container
+COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
+COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_DATA}/faucet
+# Copy SYS binary to the container
 COPY --from=syscoin-core /opt /opt
 COPY docker-entrypoint.sh /entrypoint.sh
 
