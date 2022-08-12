@@ -49,8 +49,8 @@ RUN set -ex \
 ENV SYSCOIN_PREFIX=/opt/syscoin
 
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-
-RUN git clone ${SYS_REPO} -b dev-4.x
+ARG TAG=v4.4.0rc2
+RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO}
 WORKDIR /syscoin
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
 RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat/compat.h
