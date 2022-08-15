@@ -69,7 +69,7 @@ RUN make install -j$(nproc)
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-cli
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-tx
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
-
+RUN rm ${SYSCOIN_PREFIX}/bin/sysgeth
 # Build stage for compiled artifacts
 FROM alpine:3.15
 
@@ -87,14 +87,13 @@ RUN apk --no-cache add \
   ca-certificates \
   gmp
 
-ENV SYSCOIN_DATA=/home/syscoin/.syscoin
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 ENV SYSCOIN_VERSION=4.4.0
 
 # Copy NEVM binary to the container
-COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_DATA}/sysgeth
-COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_DATA}/faucet
+COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_PREFIX}/bin/sysgeth
+COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_PREFIX}/bin/faucet
 # Copy SYS binary to the container
 COPY --from=syscoin-core /opt /opt
 COPY docker-entrypoint.sh /entrypoint.sh
