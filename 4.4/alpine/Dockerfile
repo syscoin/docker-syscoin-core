@@ -91,11 +91,11 @@ ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
 ENV SYSCOIN_VERSION=4.4.0
 
+# Copy SYS binary to the container
+COPY --from=syscoin-core /opt /opt
 # Copy NEVM binary to the container
 COPY --from=go-ethereum /go/go-ethereum/build/bin/geth ${SYSCOIN_PREFIX}/bin/sysgeth
 COPY --from=go-ethereum /go/go-ethereum/build/bin/faucet ${SYSCOIN_PREFIX}/bin/faucet
-# Copy SYS binary to the container
-COPY --from=syscoin-core /opt /opt
 COPY docker-entrypoint.sh /entrypoint.sh
 
 VOLUME ["/home/syscoin/.syscoin"]
