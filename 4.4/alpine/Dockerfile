@@ -49,7 +49,7 @@ RUN set -ex \
 ENV SYSCOIN_PREFIX=/opt/syscoin
 
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-ARG TAG=v4.4.0rc3
+ARG TAG=v4.4.0rc4
 RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO}
 WORKDIR /syscoin
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
