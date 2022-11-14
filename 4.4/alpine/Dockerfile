@@ -1,5 +1,5 @@
 # Build Geth in a stock Go builder container
-FROM golang:1.17-alpine as go-ethereum
+FROM golang:1.19-alpine as go-ethereum
 
 ARG GETH_REPO=https://github.com/syscoin/go-ethereum.git
 RUN apk add --no-cache gcc musl-dev linux-headers git
@@ -35,6 +35,7 @@ RUN apk --no-cache add bash
 RUN apk --no-cache add clang
 RUN apk --no-cache add util-macros
 RUN apk --no-cache add gmp-dev
+RUN apk --no-cache add sqlite-dev
 RUN set -ex \
   && for key in \
     90C8019E36C2E964 \
@@ -49,7 +50,7 @@ RUN set -ex \
 ENV SYSCOIN_PREFIX=/opt/syscoin
 
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-ARG TAG=v4.4.0rc4
+ARG TAG=v4.4.0rc12
 RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO}
 WORKDIR /syscoin
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
@@ -85,7 +86,8 @@ RUN apk --no-cache add \
   libzmq \
   su-exec \
   ca-certificates \
-  gmp
+  gmp \
+  sqlite-dev
 
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
