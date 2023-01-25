@@ -6,10 +6,10 @@ ARG GETH_REPO=https://github.com/syscoin/go-ethereum.git
 RUN apk add --no-cache gcc musl-dev linux-headers git
 RUN git clone ${GETH_REPO}
 ADD . /go-ethereum
-RUN cd go-ethereum && go run build/ci.go install
+RUN cd go-ethereum && git checkout 1806d2e5 && go run build/ci.go install
 
 # Build stage for Syscoin Core
-FROM alpine as syscoin-core
+FROM alpine:3.16 as syscoin-core
 
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add autoconf
