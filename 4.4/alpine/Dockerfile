@@ -1,5 +1,5 @@
 # Build Geth in a stock Go builder container
-FROM golang:1.19-alpine as go-ethereum
+FROM golang:1.20-alpine as go-ethereum
 
 ARG GETH_REPO=https://github.com/syscoin/go-ethereum.git
 RUN apk add --no-cache gcc musl-dev linux-headers git
@@ -7,7 +7,7 @@ RUN git clone ${GETH_REPO}
 ADD . /go-ethereum
 RUN cd go-ethereum && go run build/ci.go install
 # Build stage for Syscoin Core
-FROM alpine:3.15 as syscoin-core
+FROM alpine as syscoin-core
 
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/alpine.global.ssl.fastly.net/g' /etc/apk/repositories
 RUN apk --no-cache add autoconf
@@ -50,8 +50,9 @@ RUN set -ex \
 ENV SYSCOIN_PREFIX=/opt/syscoin
 
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-ARG TAG=v4.4.0rc12
+ARG TAG=v4.4.1
 RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO}
+#RUN git clone ${SYS_REPO} -b dev-4.x
 WORKDIR /syscoin
 RUN sed -i '/AX_PROG_CC_FOR_BUILD/a\AR_FLAGS=cr' src/secp256k1/configure.ac
 RUN sed -i s:sys/fcntl.h:fcntl.h: src/compat/compat.h
@@ -72,7 +73,7 @@ RUN strip ${SYSCOIN_PREFIX}/bin/syscoin-tx
 RUN strip ${SYSCOIN_PREFIX}/bin/syscoind
 RUN rm ${SYSCOIN_PREFIX}/bin/sysgeth
 # Build stage for compiled artifacts
-FROM alpine:3.15
+FROM alpine
 
 LABEL maintainer.0="Jagdeep Sidhu (@realSidhuJag)"
 
@@ -91,7 +92,7 @@ RUN apk --no-cache add \
 
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
-ENV SYSCOIN_VERSION=4.4.0
+ENV SYSCOIN_VERSION=4.4.1
 
 # Copy SYS binary to the container
 COPY --from=syscoin-core /opt /opt
