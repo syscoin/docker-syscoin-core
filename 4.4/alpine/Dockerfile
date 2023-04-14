@@ -50,7 +50,7 @@ RUN set -ex \
 ENV SYSCOIN_PREFIX=/opt/syscoin
 
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-ARG TAG=v4.4.1
+ARG TAG=v4.4.2
 RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO}
 #RUN git clone ${SYS_REPO} -b dev-4.x
 WORKDIR /syscoin
@@ -92,7 +92,7 @@ RUN apk --no-cache add \
 
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
-ENV SYSCOIN_VERSION=4.4.1
+ENV SYSCOIN_VERSION=4.4.2
 
 # Copy SYS binary to the container
 COPY --from=syscoin-core /opt /opt
