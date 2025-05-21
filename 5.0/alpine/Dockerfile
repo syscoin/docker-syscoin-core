@@ -1,7 +1,7 @@
 # Build Geth (Syscoin NEVM)
 FROM golang:1.24-alpine AS go-ethereum
 ARG GETH_REPO=https://github.com/syscoin/go-ethereum.git
-ARG TAG=v5.0.1
+ARG TAG=v5.0.3
 RUN apk add --no-cache gcc musl-dev linux-headers git
 
 RUN git clone --depth 1 --branch ${TAG} ${GETH_REPO} /go-ethereum
@@ -39,7 +39,7 @@ RUN apk --no-cache add \
 
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ARG SYS_REPO=https://github.com/syscoin/syscoin.git
-ARG TAG=v5.0.2
+ARG TAG=v5.0.4
 RUN git clone --depth 1 --branch ${TAG} ${SYS_REPO} /syscoin
 #RUN git clone ${SYS_REPO} /syscoin
 WORKDIR /syscoin
@@ -79,7 +79,7 @@ RUN adduser -S syscoin
 
 ENV SYSCOIN_PREFIX=/opt/syscoin
 ENV PATH=${SYSCOIN_PREFIX}/bin:$PATH
-ENV SYSCOIN_VERSION=5.0.2
+ENV SYSCOIN_VERSION=5.0.4
 
 # Copy binaries from build stages
 COPY --from=syscoin-core /opt/syscoin /opt/syscoin
